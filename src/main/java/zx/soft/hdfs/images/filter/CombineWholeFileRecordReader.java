@@ -18,6 +18,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 public class CombineWholeFileRecordReader extends RecordReader<Text, BytesWritable> {
 
 	private CombineFileSplit split;
+	@SuppressWarnings("unused")
 	private TaskAttemptContext context;
 	private final int index;
 	private RecordReader<Text, BytesWritable> rr;

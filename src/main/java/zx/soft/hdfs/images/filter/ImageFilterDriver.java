@@ -32,7 +32,7 @@ public class ImageFilterDriver extends Configured implements Tool {
 		}
 
 		Job job = new Job();
-		Configuration conf = new Configuration();
+		//		Configuration conf = new Configuration();
 		//conf.set("mapreduce.jobtracker.address", "local");
 		//conf.set("fs.defaultFS", "file:///");
 
