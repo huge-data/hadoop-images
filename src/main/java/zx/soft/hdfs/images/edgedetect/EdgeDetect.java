@@ -1,4 +1,4 @@
-package zx.soft.hdfs.images.canny;
+package zx.soft.hdfs.images.edgedetect;
 
 import java.awt.image.BufferedImage;
 import java.util.Iterator;
@@ -19,38 +19,31 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-import zx.soft.hdfs.images.utils.ImageRecordReader;
-import zx.soft.hdfs.images.utils.InputFormatImg;
-
-public class Canny {
+public class EdgeDetect {
 
 	public static void main(String[] args) throws Exception {
 
-		Configuration config = new Configuration();
-		String[] otherArgs = new GenericOptionsParser(config, args).getRemainingArgs();
-
+		Configuration conf = new Configuration();
+		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		if (otherArgs.length != 2) {
-			System.err.println("Usage: Canny <in> <out>");
+			System.err.println("Usage: EdgeDetect <in> <out>");
 			System.exit(2);
 		}
-
 		BufferedImage img = null;
-		FileSystem dfs = FileSystem.get(config);
+		FileSystem dfs = FileSystem.get(conf);
 		Path dir = new Path(otherArgs[0]);
 		FileStatus[] files = dfs.listStatus(dir);
-
-		config.setInt("overlapPixel", 64);
-
+		//String fname = null;
+		conf.setInt("overlapPixel", 64);
 		int overlapPixel = ImageRecordReader.overlapPixel;
 		System.out.println(overlapPixel);
-
-		Path filepath = null;
+		Path fpath = null;
 		for (FileStatus file : files) {
 			if (file.isDir())
 				continue;
-			filepath = file.getPath();
-
-			System.out.println(filepath);
+			fpath = file.getPath();
+			//fname = fpath.getName();
+			System.out.println(fpath);
 		}
 
 		Path outdir = new Path(otherArgs[1]);
@@ -58,13 +51,16 @@ public class Canny {
 			dfs.delete(outdir, true);
 		Path workdir = dfs.getWorkingDirectory();
 
-		Job job = new Job(config, "Canny Edge detection");
-		job.setJarByClass(Canny.class);
-		job.setMapperClass(CannyMapper.class);
+		Job job = new Job(conf, "edge detection");
+		job.setJarByClass(EdgeDetect.class);
+		job.setMapperClass(EdgeMapper.class);
+		//job.setCombinerClass(EdgeReducer.class);
+		job.setReducerClass(EdgeReducer.class);
 
-		job.setReducerClass(CannyReducer.class);
+		job.setInputFormatClass(ImageInputFormat.class);
 
-		job.setInputFormatClass(InputFormatImg.class);
+		//		job.setMapOutputKeyClass(LongWritable.class);
+		//		job.setMapOutputValueClass(BufferedImage.class);
 
 		job.setOutputKeyClass(LongWritable.class);
 		job.setOutputValueClass(LongWritable.class);
@@ -82,8 +78,8 @@ public class Canny {
 		int sizePixel = ImageRecordReader.sizePixel;
 		int border = 16;
 
-		FSDataInputStream filesys = null;
-		MemoryCacheImageInputStream image = new MemoryCacheImageInputStream(dfs.open(filepath));
+		FSDataInputStream fs = null;
+		MemoryCacheImageInputStream image = new MemoryCacheImageInputStream(dfs.open(fpath));
 		Iterator<ImageReader> readers = ImageIO.getImageReaders(image);
 		ImageReader reader = readers.next();
 		reader.setInput(image);
@@ -92,10 +88,9 @@ public class Canny {
 		imgheight = reader.getHeight(0);
 
 		img = new BufferedImage(imgwidth, imgheight, BufferedImage.TYPE_INT_RGB);
-
 		if (imgwidth * imgheight <= sizePixel * sizePixel) {
-			filesys = dfs.open(iPath);
-			img = ImageIO.read(filesys);
+			fs = dfs.open(iPath);
+			img = ImageIO.read(fs);
 			iPath = null;
 		}
 		while (iPath != null && dfs.exists(iPath)) {
@@ -106,29 +101,26 @@ public class Canny {
 				currY += sizePixel;
 			}
 
-			filesys = dfs.open(iPath);
-			BufferedImage window = ImageIO.read(filesys);
+			fs = dfs.open(iPath);
+			BufferedImage window = ImageIO.read(fs);
 			int width = window.getWidth() - border * 2;
 			int height = window.getHeight() - border * 2;
 
 			img.setRGB(x + border, y + border, width, height,
 					window.getRGB(border, border, width, height, null, 0, width), 0, width);
-			filesys.close();
+			fs.close();
 			i++;
 			iPath = new Path(tmpdir, "" + i);
 		}
-		Path newimgpath = new Path(outdir, filepath.getName());
+		Path newimgpath = new Path(outdir, fpath.getName());
 
-		if (dfs.exists(newimgpath)) {
+		if (dfs.exists(newimgpath))
 			dfs.delete(newimgpath, false);
-		}
-
 		dfs.createNewFile(newimgpath);
 		FSDataOutputStream ofs = dfs.create(newimgpath);
 		ImageIO.write(img, "JPG", ofs);
 		ofs.close();
 		dfs.delete(tmpdir, true);
-
 		System.exit(ret ? 0 : 1);
 	}
 

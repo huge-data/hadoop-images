@@ -19,7 +19,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-import zx.soft.hdfs.images.utils.ImgRecordReader;
+import zx.soft.hdfs.images.utils.ImageRecordReader;
 import zx.soft.hdfs.images.utils.InputFormatImg;
 
 public class SobelFilter {
@@ -41,7 +41,7 @@ public class SobelFilter {
 		//String fname = null;
 
 		conf.setInt("overlapPixel", 64);
-		int overlapPixel = ImgRecordReader.overlapPixel;
+		int overlapPixel = ImageRecordReader.overlapPixel;
 		System.out.println(overlapPixel);
 		Path fpath = null;
 		for (FileStatus file : files) {
@@ -78,7 +78,7 @@ public class SobelFilter {
 		int i = 0;
 		Path iPath = new Path(tmpdir, "" + i);
 		int currX = 0, currY = 0;
-		int sizePixel = ImgRecordReader.sizePixel;
+		int sizePixel = ImageRecordReader.sizePixel;
 		int border = 16;
 
 		FSDataInputStream fs = null;
