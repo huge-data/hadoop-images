@@ -36,7 +36,7 @@ public class ResizeMapper extends Mapper<Text, BytesWritable, NullWritable, Null
 	protected void setup(Context context) throws IOException, InterruptedException {
 		// http://docs.opencv.org/doc/tutorials/introduction/java_eclipse/java_eclipse.html#java-eclipse
 		// 根据网址安装OpenCV
-		//	    System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
 	}
 

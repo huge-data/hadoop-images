@@ -1,0 +1,14 @@
+INSTRUCTIONS:
+To compile, cd into the hadoop folder and execute the build.sh script. 
+To run the program, modify and execute the run.sh script to take the desired input 
+image, or use a command of the format shown in the run.sh script.
+
+First, you should really read the handout for information about how the contrast enhancement works.
+
+The main() that runs is in driver/Driver.java.
+expand(), reduce(), etc is in transform/PGMTransform.java.
+reading, writing and getting the pixels of .pgm files is in image/PGMImage.java.
+A high level overview of the process is in contrast/PGMContrast.java
+
+When you implement your hadoop version, you will probably want to reuse PGMImage.java.
+If not, feel free to reinvent the wheel.
